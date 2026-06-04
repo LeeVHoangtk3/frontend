@@ -9,6 +9,7 @@ import UserDetail from './components/UserDetail';
 import UserList from './components/UserList';
 import UserPhotos from './components/UserPhotos';
 import LoginRegister from './components/LoginRegister';
+import axiosClient from './api/axiosClient';
 
 export const AppContext = React.createContext({
   title: 'Photo Sharing App',
@@ -31,7 +32,7 @@ const App = () => {
   };
 
   const handleLogout = () => {
-    fetch('/admin/logout', { method: 'POST' })
+    axiosClient.post('/auth/admin/logout')
       .then(() => {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');

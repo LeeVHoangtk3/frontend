@@ -18,6 +18,9 @@ import { Link, useParams } from 'react-router-dom';
 import './styles.css';
 import fetchModel from '../../lib/fetchModelData';
 import { AppContext } from '../../App';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 /**
  * Define UserPhotos, a React component of Project 4.
@@ -59,18 +62,8 @@ function UserPhotos() {
     const commentText = newComments[photoId];
     if (!commentText || commentText.trim() === '') return;
 
-    fetch(`/commentsOfPhoto/${photoId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ comment: commentText }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(errText || 'Failed to add comment');
-        }
+    axios.post(`${BACKEND_URL}/commentsOfPhoto/${photoId}`, { comment: commentText }, { withCredentials: true })
+      .then(() => {
         // Re-fetch photos to display the newly added comment immediately
         return fetchModel(`/photosOfUser/${userId}`);
       })
@@ -83,7 +76,7 @@ function UserPhotos() {
         }));
       })
       .catch((err) => {
-        alert('Error adding comment: ' + err.message);
+        alert('Error adding comment: ' + (err.response?.data || err.message));
       });
   };
 
