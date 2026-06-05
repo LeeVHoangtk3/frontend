@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-export const baseServerURL = "http://localhost:8080";
+export const baseServerURL = "https://cysxr4-8080.csb.app";
 
 const apiURL = `${baseServerURL}/api`;
 
