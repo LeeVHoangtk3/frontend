@@ -13,7 +13,7 @@ function UserPhotos() {
   const loadPhotos = React.useCallback(() => {
     fetchModel(`/photo/photosOfUser/${userId}`)
       .then(res => setPhotos(res.data))
-      .catch(err => console.error("Lỗi khi lấy danh sách ảnh:", err));
+      .catch(err => console.error("loi khi lay danh sach anh, ", err));
   }, [userId]);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function UserPhotos() {
       loadPhotos();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data || "Đã xảy ra lỗi khi thêm bình luận");
+      alert(err.response?.data || "da xay ra loi khi them binh luan");
     }
   };
 

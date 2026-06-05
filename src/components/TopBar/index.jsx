@@ -18,7 +18,7 @@ function TopBar({ currentUser, setCurrentUser }) {
           const user = res.data;
           setAppContext(viewType === "users" ? `${user.first_name} ${user.last_name}` : `Photos of ${user.first_name} ${user.last_name}`);
         })
-        .catch(err => console.error("Lỗi khi lấy thông tin user cho TopBar:", err));
+        .catch(err => console.error("loi khi lay thong tin user cho topbar, ", err));
     } else {
       setAppContext("");
     }
@@ -39,7 +39,7 @@ function TopBar({ currentUser, setCurrentUser }) {
         window.location.reload();
       }
     } catch (err) {
-      console.error("Lỗi khi upload ảnh:", err);
+      console.error("loi khi upload anh, ", err);
       alert(err.response?.data?.message || "Failed to upload photo");
     }
   };
@@ -49,7 +49,7 @@ function TopBar({ currentUser, setCurrentUser }) {
       await axiosClient.post("/auth/admin/logout");
       setCurrentUser(null);
     } catch (err) {
-      console.log("Lỗi khi đăng xuất:", err);
+      console.log("loi khi dang xuat, ", err);
     }
   };
 
@@ -58,10 +58,10 @@ function TopBar({ currentUser, setCurrentUser }) {
       <Toolbar sx={{ justifyContent: "space-between" }}>
         <Box>
           <Typography variant="h6" color="inherit" sx={{ fontWeight: "bold" }}>
-            {currentUser ? `Hi ${currentUser.first_name}` : "Please login"}
+            {currentUser ? `chao ${currentUser.first_name}` : "chao ban"}
           </Typography>
           <Typography variant="body2" color="inherit">
-            This is the TopBar component
+            trang thu viern anh cua toi
           </Typography>
         </Box>
 
@@ -80,11 +80,11 @@ function TopBar({ currentUser, setCurrentUser }) {
                 onChange={handlePhotoUpload}
               />
               <label htmlFor="topbar-upload-file-button">
-                <Button variant="contained" sx={{ bgcolor: "white", color: "primary.main", "&:hover": { bgcolor: "#f5f5f5" } }} component="span">
+                <Button variant="outlined" color="primary" component="span">
                   Add Photo
                 </Button>
               </label>
-              <Button variant="contained" sx={{ bgcolor: "white", color: "primary.main", "&:hover": { bgcolor: "#f5f5f5" } }} onClick={handleLogout}>
+              <Button variant="outlined" color="primary" onClick={handleLogout}>
                 Logout
               </Button>
             </Box>

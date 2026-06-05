@@ -10,7 +10,7 @@ function UserList() {
   useEffect(() => {
     fetchModel("/user/list")
       .then(res => setUsers(res.data))
-      .catch(err => console.error("Lỗi khi lấy danh sách user:", err));
+      .catch(err => console.error("loi khi lay danh sach user, ", err));
   }, []);
 
   return (

@@ -11,7 +11,7 @@ function UserDetail() {
   useEffect(() => {
     fetchModel(`/user/${userId}`)
       .then(res => setUserDetail(res.data))
-      .catch(err => console.error("Lỗi khi lấy chi tiết người dùng:", err));
+      .catch(err => console.error("loi khi lay chi tiet nguoi dung", err));
   }, [userId]);
 
   return (
