@@ -1,157 +1,112 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Divider,
-  Link as MuiLink,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-  Box,
-  TextField,
-  Button,
-} from '@mui/material';
-import { Link, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Typography, Card, CardMedia, CardContent, List, ListItem, ListItemText, Divider, Button, Box, TextField } from "@mui/material";
+import { useParams, Link } from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData";
+import axiosClient, { baseServerURL } from "../../api/axiosClient";
+import "./styles.css";
 
-import './styles.css';
-import fetchModel from '../../lib/fetchModelData';
-import { AppContext } from '../../App';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-
-/**
- * Define UserPhotos, a React component of Project 4.
- */
 function UserPhotos() {
   const { userId } = useParams();
-  const { setTitle } = useContext(AppContext);
-  const [user, setUser] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [newComments, setNewComments] = useState({});
 
+  const loadPhotos = React.useCallback(() => {
+    fetchModel(`/photo/photosOfUser/${userId}`)
+      .then(res => setPhotos(res.data))
+      .catch(err => console.error("Lỗi khi lấy danh sách ảnh:", err));
+  }, [userId]);
+
   useEffect(() => {
-    setLoading(true);
+    loadPhotos();
+  }, [loadPhotos]);
 
-    Promise.all([fetchModel(`/user/${userId}`), fetchModel(`/photosOfUser/${userId}`)])
-      .then(([userData, photoData]) => {
-        setUser(userData);
-        setPhotos(photoData);
-        setTitle(`Photos of ${userData.first_name} ${userData.last_name}`);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Unable to load photos');
-        setLoading(false);
-      });
-  }, [userId, setTitle]);
-
-  const handleCommentChange = (photoId, value) => {
-    setNewComments((prev) => ({
-      ...prev,
-      [photoId]: value,
-    }));
-  };
-
-  const handleAddComment = (e, photoId) => {
-    e.preventDefault();
+  const handleAddComment = async (photoId) => {
     const commentText = newComments[photoId];
-    if (!commentText || commentText.trim() === '') return;
+    if (!commentText?.trim()) return;
 
-    axios.post(`${BACKEND_URL}/commentsOfPhoto/${photoId}`, { comment: commentText }, { withCredentials: true })
-      .then(() => {
-        // Re-fetch photos to display the newly added comment immediately
-        return fetchModel(`/photosOfUser/${userId}`);
-      })
-      .then((photoData) => {
-        setPhotos(photoData);
-        // Clear the text field for this photo
-        setNewComments((prev) => ({
-          ...prev,
-          [photoId]: '',
-        }));
-      })
-      .catch((err) => {
-        alert('Error adding comment: ' + (err.response?.data || err.message));
-      });
+    try {
+      await axiosClient.post(`/photo/commentsOfPhoto/${photoId}`, { comment: commentText });
+      setNewComments(prev => ({ ...prev, [photoId]: "" }));
+      loadPhotos();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data || "Đã xảy ra lỗi khi thêm bình luận");
+    }
   };
-
-  if (loading) {
-    return <Typography>Loading photos...</Typography>;
-  }
-
-  if (error) {
-    return <Typography color="error">{error}</Typography>;
-  }
-
-  if (!user) {
-    return <Typography>User not found.</Typography>;
-  }
 
   return (
-    <div>
-      <Typography variant="h6" gutterBottom>
-        Photos of {user.first_name} {user.last_name}
-      </Typography>
-      {photos.length === 0 && <Typography>No photos available.</Typography>}
-      {photos.map((photo) => (
-        <Card key={photo._id} sx={{ mb: 3 }}>
-          <CardMedia
-            component="img"
-            image={photo.file_name && photo.file_name.startsWith('data:') ? photo.file_name : `${process.env.PUBLIC_URL}/images/${photo.file_name}`}
-            alt={photo.file_name}
-          />
-          <CardContent>
-            <Typography variant="subtitle1" gutterBottom>
-              {new Date(photo.date_time).toLocaleString()}
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              Comments:
-            </Typography>
-            <List>
-              {(photo.comments || []).map((comment) => (
-                <React.Fragment key={comment._id}>
-                  <ListItem alignItems="flex-start">
-                    <ListItemText
-                      primary={comment.comment}
-                      secondary={
-                        <>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {new Date(comment.date_time).toLocaleString()}
-                          </Typography>
-                          {' — '}
-                          <MuiLink component={Link} to={`/users/${comment.user._id}`}>
-                            {comment.user.first_name} {comment.user.last_name}
-                          </MuiLink>
-                        </>
-                      }
-                    />
-                  </ListItem>
-                  <Divider component="li" />
-                </React.Fragment>
-              ))}
-            </List>
+    <Box>
+      {photos.length > 0 ? (
+        photos.map((photo) => (
+          <Card key={photo._id} sx={{ mb: 4 }}>
+            <CardMedia
+              component="img"
+              image={`${baseServerURL}/images/${photo.file_name}`}
+              alt="User upload"
+              sx={{ maxHeight: 500, objectFit: "contain", backgroundColor: "#f5f5f5" }}
+            />
+            <CardContent>
+              <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                Posted on: {new Date(photo.date_time).toLocaleString()}
+              </Typography>
 
-            <Box component="form" onSubmit={(e) => handleAddComment(e, photo._id)} sx={{ mt: 2, display: 'flex', gap: 1 }}>
-              <TextField
-                size="small"
-                fullWidth
-                placeholder="Write a comment..."
-                value={newComments[photo._id] || ''}
-                onChange={(e) => handleCommentChange(photo._id, e.target.value)}
-              />
-              <Button type="submit" variant="contained" size="small">
-                Post
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+              {photo.comments?.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="h6">Comments:</Typography>
+                  <List>
+                    {photo.comments.map((comment) => (
+                      <React.Fragment key={comment._id}>
+                        <ListItem alignItems="flex-start">
+                          <ListItemText
+                            primary={
+                              comment.user ? (
+                                <Link to={`/users/${comment.user._id}`}>
+                                  {comment.user.first_name} {comment.user.last_name}
+                                </Link>
+                              ) : (
+                                "Unknown User"
+                              )
+                            }
+                            secondary={
+                              <>
+                                <Typography component="span" variant="body2" color="text.primary" sx={{ mr: 1 }}>
+                                  {new Date(comment.date_time).toLocaleString()} -
+                                </Typography>
+                                {comment.comment}
+                              </>
+                            }
+                          />
+                        </ListItem>
+                        <Divider component="li" />
+                      </React.Fragment>
+                    ))}
+                  </List>
+                </Box>
+              )}
+
+              <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Add a comment..."
+                  value={newComments[photo._id] || ""}
+                  onChange={(e) => setNewComments(prev => ({ ...prev, [photo._id]: e.target.value }))}
+                />
+                <Button
+                  variant="contained"
+                  onClick={() => handleAddComment(photo._id)}
+                  disabled={!newComments[photo._id]?.trim()}
+                >
+                  Post
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        ))
+      ) : (
+        <Typography variant="body1">No photos available for this user.</Typography>
+      )}
+    </Box>
   );
 }
 

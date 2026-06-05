@@ -1,76 +1,41 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  Button,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-} from '@mui/material';
-import { Link, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Typography, Button, Card, CardContent } from "@mui/material";
+import { useParams, Link } from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData";
+import "./styles.css";
 
-import './styles.css';
-import fetchModel from '../../lib/fetchModelData';
-import { AppContext } from '../../App';
-
-/**
- * Define UserDetail, a React component of Project 4.
- */
 function UserDetail() {
   const { userId } = useParams();
-  const { setTitle } = useContext(AppContext);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userDetail, setUserDetail] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
     fetchModel(`/user/${userId}`)
-      .then((data) => {
-        setUser(data);
-        setTitle(`${data.first_name} ${data.last_name}`);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Unable to load user');
-        setLoading(false);
-      });
-  }, [userId, setTitle]);
-
-  if (loading) {
-    return <Typography>Loading user details...</Typography>;
-  }
-
-  if (error) {
-    return <Typography color="error">{error}</Typography>;
-  }
-
-  if (!user) {
-    return <Typography>User not found.</Typography>;
-  }
+      .then(res => setUserDetail(res.data))
+      .catch(err => console.error("Lỗi khi lấy chi tiết người dùng:", err));
+  }, [userId]);
 
   return (
-    <div>
-      <Typography variant="h6" gutterBottom>
-        {user.first_name} {user.last_name}
-      </Typography>
-      <List>
-        <ListItem>
-          <ListItemText primary="Location" secondary={user.location} />
-        </ListItem>
-        <Divider />
-        <ListItem>
-          <ListItemText primary="Description" secondary={user.description} />
-        </ListItem>
-        <Divider />
-        <ListItem>
-          <ListItemText primary="Occupation" secondary={user.occupation} />
-        </ListItem>
-      </List>
-      <Button component={Link} to={`/photos/${user._id}`} variant="contained" sx={{ mt: 2 }}>
-        View Photos
-      </Button>
-    </div>
+    userDetail && (
+      <Card sx={{ mt: 2 }}>
+        <CardContent>
+          <Typography variant="h4" gutterBottom>
+            {userDetail.first_name} {userDetail.last_name}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            <strong>Location:</strong> {userDetail.location}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            <strong>Occupation:</strong> {userDetail.occupation}
+          </Typography>
+          <Typography variant="body1" paragraph>
+            <strong>Description:</strong> {userDetail.description}
+          </Typography>
+          <Button variant="contained" color="primary" component={Link} to={`/photos/${userId}`}>
+            View Photos
+          </Button>
+        </CardContent>
+      </Card>
+    )
   );
 }
 

@@ -1,13 +1,17 @@
-import axios from 'axios';
+import axiosClient from "../api/axiosClient";
 
-const BACKEND_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+async function fetchModel(url) {
+  try {
+    const res = await axiosClient.get(`${url}`);
 
-function fetchModel(url) {
-  return axios.get(BACKEND_URL + url, { withCredentials: true })
-    .then((res) => res.data)
-    .catch((err) => {
-      throw new Error(err.response?.data || `Server returned ${err.response?.status || 'Error'}`);
-    });
+    return { data: res.data };
+  } catch (error) {
+    if (error.response) {
+      throw new Error(`HTTP error! status: ${error.response.status}`);
+    } else {
+      throw error;
+    }
+  }
 }
 
 export default fetchModel;

@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Typography, TextField, Button, Box, Alert, Paper, Link } from "@mui/material";
+import { Typography, TextField, Button, Box, Alert } from "@mui/material";
 import axiosClient from "../../api/axiosClient";
 
-function LoginRegister({ onLoginSuccess }) {
+function LoginRegister({ onLogin }) {
   const [isLoginView, setIsLoginView] = useState(true);
-
   const [loginName, setLoginName] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -13,163 +12,103 @@ function LoginRegister({ onLoginSuccess }) {
     login_name: "", password: "", first_name: "", last_name: "",
     location: "", description: "", occupation: ""
   });
-
   const [confirmPassword, setConfirmPassword] = useState("");
   const [regError, setRegError] = useState("");
   const [regSuccess, setRegSuccess] = useState("");
 
-  const toggleView = () => {
-    setIsLoginView(!isLoginView);
-    setLoginError("");
-    setRegError("");
-    setRegSuccess("");
-    setConfirmPassword("");
-  };
-
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    try {
-      const response = await axiosClient.post("/auth/admin/login", {
-        login_name: loginName,
-        password: loginPassword,
+    axiosClient.post("/auth/admin/login", { login_name: loginName, password: loginPassword })
+      .then(res => onLogin(res.data))
+      .catch(err => {
+        const msg = typeof err.response?.data === "string" ? err.response.data : err.response?.data?.message || "Đăng nhập thất bại";
+        setLoginError(msg);
       });
-      onLoginSuccess(response.data);
-    } catch (err) {
-      setLoginError(err.response?.data?.message || "Đăng nhập thất bại");
-    }
   };
 
-  const handleRegisterChange = (e) => {
-    setRegData({ ...regData, [e.target.name]: e.target.value });
-  };
-
-  const handleRegister = async (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
-
     if (regData.password !== confirmPassword) {
-      setRegError("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!");
+      setRegError("Mật khẩu xác nhận không khớp!");
       return;
     }
-
-    try {
-      await axiosClient.post("/auth/user", regData);
-      setRegSuccess("Đăng ký thành công! Bạn có thể chuyển sang trang Đăng nhập.");
-      setRegError("");
-
-      setRegData({
-        login_name: "", password: "", first_name: "", last_name: "",
-        location: "", description: "", occupation: ""
+    axiosClient.post("/auth/user", regData)
+      .then(() => {
+        setLoginName(regData.login_name);
+        setRegSuccess("Đăng ký thành công! Hãy đăng nhập.");
+        setIsLoginView(true);
+        setRegError("");
+        setRegData({ login_name: "", password: "", first_name: "", last_name: "", location: "", description: "", occupation: "" });
+        setConfirmPassword("");
+      })
+      .catch(err => {
+        const msg = typeof err.response?.data === "string" ? err.response.data : err.response?.data?.message || "Đăng ký thất bại";
+        setRegError(msg);
       });
-      setConfirmPassword("");
-    } catch (err) {
-      setRegError(err.response?.data?.message || "Đăng ký thất bại");
-      setRegSuccess("");
-    }
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8, px: 2 }}>
-      <Paper elevation={3} sx={{ padding: 4, width: '100%', maxWidth: 500 }}>
-
-        {isLoginView ? (
-          <Box>
-            <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Login
-            </Typography>
-
-            {loginError && <Alert severity="error" sx={{ mb: 2 }}>{loginError}</Alert>}
-
-            <form onSubmit={handleLogin}>
-              <TextField
-                fullWidth label="Login Name" variant="outlined" margin="normal"
-                value={loginName} onChange={(e) => setLoginName(e.target.value)} required
-              />
-              <TextField
-                fullWidth label="Password" type="password" variant="outlined" margin="normal"
-                value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required
-              />
-              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 3, py: 1.5 }}>
-                Login
-              </Button>
-            </form>
-
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Typography variant="body2">
-                Don't have an account?{" "}
-                <Link component="button" variant="body2" onClick={toggleView} sx={{ fontWeight: 'bold' }}>
-                  Join us now!
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <Box>
-            <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Register
-            </Typography>
-
-            {regError && <Alert severity="error" sx={{ mb: 2 }}>{regError}</Alert>}
-            {regSuccess && <Alert severity="success" sx={{ mb: 2 }}>{regSuccess}</Alert>}
-
-            <form onSubmit={handleRegister}>
-              <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                <TextField
-                  fullWidth label="First Name" name="first_name" variant="outlined" margin="dense"
-                  value={regData.first_name} onChange={handleRegisterChange} required
-                />
-                <TextField
-                  fullWidth label="Last Name" name="last_name" variant="outlined" margin="dense"
-                  value={regData.last_name} onChange={handleRegisterChange} required
-                />
-              </Box>
-
-              <TextField
-                fullWidth label="Login Name" name="login_name" variant="outlined" margin="dense"
-                value={regData.login_name} onChange={handleRegisterChange} required
-              />
-
-              <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                <TextField
-                  fullWidth label="Password" name="password" type="password" variant="outlined" margin="dense"
-                  value={regData.password} onChange={handleRegisterChange} required
-                />
-
-                <TextField
-                  fullWidth label="Confirm Password" type="password" variant="outlined" margin="dense"
-                  value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required
-                />
-              </Box>
-
-              <TextField
-                fullWidth label="Location" name="location" variant="outlined" margin="dense"
-                value={regData.location} onChange={handleRegisterChange}
-              />
-              <TextField
-                fullWidth label="Description" name="description" variant="outlined" margin="dense"
-                value={regData.description} onChange={handleRegisterChange}
-              />
-              <TextField
-                fullWidth label="Occupation" name="occupation" variant="outlined" margin="dense"
-                value={regData.occupation} onChange={handleRegisterChange}
-              />
-
-              <Button type="submit" variant="contained" color="success" fullWidth sx={{ mt: 3, py: 1.5 }}>
-                Create account
-              </Button>
-            </form>
-
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Typography variant="body2">
-                Already have an account?{" "}
-                <Link component="button" variant="body2" onClick={toggleView} sx={{ fontWeight: 'bold' }}>
-                  Return to login
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-      </Paper>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 4, p: 2 }}>
+      {isLoginView ? (
+        <form onSubmit={handleLogin}>
+          <Typography variant="h5" align="center" gutterBottom>Đăng nhập</Typography>
+          {loginError && <Alert severity="error" sx={{ mb: 2 }}>{loginError}</Alert>}
+          {regSuccess && <Alert severity="success" sx={{ mb: 2 }}>{regSuccess}</Alert>}
+          <TextField
+            fullWidth label="Tên đăng nhập" margin="normal" required
+            value={loginName} onChange={e => { setLoginName(e.target.value); setRegSuccess(""); }}
+          />
+          <TextField
+            fullWidth label="Mật khẩu" type="password" margin="normal" required
+            value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
+          />
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>Đăng nhập</Button>
+          <Button fullWidth onClick={() => { setIsLoginView(false); setLoginError(""); setRegSuccess(""); }} sx={{ mt: 1 }}>
+            Chưa có tài khoản? Đăng ký ngay
+          </Button>
+        </form>
+      ) : (
+        <form onSubmit={handleRegister}>
+          <Typography variant="h5" align="center" gutterBottom>Đăng ký</Typography>
+          <TextField
+            fullWidth label="Tên đăng nhập" margin="dense" required name="login_name"
+            value={regData.login_name} onChange={e => setRegData({ ...regData, login_name: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Mật khẩu" type="password" margin="dense" required name="password"
+            value={regData.password} onChange={e => setRegData({ ...regData, password: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Xác nhận mật khẩu" type="password" margin="dense" required
+            value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+          />
+          <TextField
+            fullWidth label="Tên" margin="dense" required name="first_name"
+            value={regData.first_name} onChange={e => setRegData({ ...regData, first_name: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Họ" margin="dense" required name="last_name"
+            value={regData.last_name} onChange={e => setRegData({ ...regData, last_name: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Địa điểm" margin="dense" name="location"
+            value={regData.location} onChange={e => setRegData({ ...regData, location: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Nghề nghiệp" margin="dense" name="occupation"
+            value={regData.occupation} onChange={e => setRegData({ ...regData, occupation: e.target.value })}
+          />
+          <TextField
+            fullWidth label="Mô tả" margin="dense" name="description"
+            value={regData.description} onChange={e => setRegData({ ...regData, description: e.target.value })}
+          />
+          <Button type="submit" variant="contained" color="success" fullWidth sx={{ mt: 2 }}>Đăng ký</Button>
+          <Button fullWidth onClick={() => { setIsLoginView(true); setRegError(""); setRegSuccess(""); }} sx={{ mt: 1 }}>
+            Quay lại Đăng nhập
+          </Button>
+          {regError && <Alert severity="error" sx={{ mt: 2 }}>{regError}</Alert>}
+        </form>
+      )}
     </Box>
   );
 }
