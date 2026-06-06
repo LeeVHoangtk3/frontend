@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Card, CardMedia, CardContent, List, ListItem, ListItemText, Divider, Button, Box, TextField } from "@mui/material";
 import { useParams, Link } from "react-router-dom";
 import fetchModel from "../../lib/fetchModelData";
-import axiosClient, { baseServerURL } from "../../api/axiosClient";
+import axiosClient from "../../api/axiosClient";
 import "./styles.css";
 
 function UserPhotos() {
@@ -41,7 +41,7 @@ function UserPhotos() {
           <Card key={photo._id} sx={{ mb: 4 }}>
             <CardMedia
               component="img"
-              image={`${baseServerURL}/images/${photo.file_name}`}
+              image={`/images/${photo.file_name}`}
               alt="User upload"
               sx={{ maxHeight: 500, objectFit: "contain", backgroundColor: "#f5f5f5" }}
             />

@@ -35,9 +35,7 @@ function TopBar({ currentUser, setCurrentUser }) {
       await axiosClient.post("/photo/new", formData);
       alert("Upload photo successfully!");
       navigate(`/photos/${currentUser._id}`);
-      if (location.pathname === `/photos/${currentUser._id}`) {
-        window.location.reload();
-      }
+      window.location.reload();
     } catch (err) {
       console.error("loi khi upload anh, ", err);
       alert(err.response?.data?.message || "Failed to upload photo");
@@ -80,11 +78,11 @@ function TopBar({ currentUser, setCurrentUser }) {
                 onChange={handlePhotoUpload}
               />
               <label htmlFor="topbar-upload-file-button">
-                <Button variant="outlined" color="primary" component="span">
+                <Button variant="outlined" color="inherit" component="span">
                   Add Photo
                 </Button>
               </label>
-              <Button variant="outlined" color="primary" onClick={handleLogout}>
+              <Button variant="outlined" color="inherit" onClick={handleLogout}>
                 Logout
               </Button>
             </Box>
